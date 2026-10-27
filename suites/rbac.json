@@ -1,0 +1,8 @@
+{
+  "description": "Permissions and data-isolation checks for every role. Read-only.",
+  "select": {
+    "tags": [
+      "rbac"
+    ]
+  }
+}

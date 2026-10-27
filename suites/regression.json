@@ -1,0 +1,15 @@
+{
+  "description": "Full functional regression before a release (P0-P2, no long nightly sweeps). Split with --shard across agents.",
+  "select": {
+    "priority": [
+      "P0",
+      "P1",
+      "P2"
+    ]
+  },
+  "exclude": {
+    "tags": [
+      "nightly"
+    ]
+  }
+}

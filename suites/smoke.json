@@ -1,0 +1,11 @@
+{
+  "description": "Fast health check after every deploy: P0 cases tagged smoke.",
+  "select": {
+    "tags": [
+      "smoke"
+    ],
+    "priority": [
+      "P0"
+    ]
+  }
+}

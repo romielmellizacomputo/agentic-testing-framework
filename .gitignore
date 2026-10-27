@@ -1,0 +1,33 @@
+# --- Private configuration (never commit) ---
+config/env.json
+config/accounts.local.json
+config/roles.md
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# --- Test browser profile (cookies, sessions) ---
+.browser-profile/
+
+# --- Run outputs: contain app data. Commit only to PRIVATE repos, after review. ---
+runs/*
+!runs/README.md
+reports/*
+!reports/README.md
+bugs/*
+!bugs/README.md
+inventory/*
+!inventory/README.md
+unit-drafts/*
+!unit-drafts/README.md
+scripted-drafts/
+
+# --- Tooling ---
+node_modules/
+*.tmp
+*.log
+.DS_Store
+Thumbs.db

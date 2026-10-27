@@ -1,0 +1,35 @@
+{
+  "name": "agentic-testing-framework",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Let any AI agent test your web app like a QA engineer: Markdown test cases, real-browser runs, and ready-to-file bug reports.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "init": "node tools/init.mjs",
+    "validate": "node tools/validate-cases.mjs",
+    "check-secrets": "node tools/check-secrets.mjs",
+    "selftest": "node tools/selftest.mjs",
+    "test": "node tools/validate-cases.mjs && node tools/check-secrets.mjs && node tools/selftest.mjs",
+    "plan:smoke": "node tools/plan-run.mjs --suite smoke",
+    "status": "node tools/status.mjs latest",
+    "report": "node tools/report.mjs latest",
+    "browser": "node tools/browser/launch.mjs",
+    "hooks": "node tools/install-hooks.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "1.48.2"
+  },
+  "keywords": [
+    "agentic-testing",
+    "ai-testing",
+    "qa-automation",
+    "e2e-testing",
+    "llm-agents",
+    "browser-automation",
+    "rbac-testing"
+  ]
+}

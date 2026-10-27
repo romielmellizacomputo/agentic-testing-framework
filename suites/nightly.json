@@ -1,0 +1,13 @@
+{
+  "description": "Long sweeps and deep checks: errors, responsive, accessibility, performance, security payloads.",
+  "select": {
+    "tags": [
+      "nightly",
+      "sweep",
+      "security",
+      "a11y",
+      "performance",
+      "responsive"
+    ]
+  }
+}
