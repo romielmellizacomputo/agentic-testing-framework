@@ -28,4 +28,6 @@ out += `| | Test | Note |\n|---|---|---|\n`;
 for (const r of rows) out += `| ${icon[r.status] || r.status} | ${r.title.replace(/\|/g, '/')} | ${redact(r.note).replace(/\|/g, '/').replace(/\x1b\[[0-9;]*m/g, '').slice(0, 160)}${r.known.length ? ` _known: ${[...new Set(r.known)].length}_` : ''} |\n`;
 const known = [...new Set(rows.flatMap(r => r.known))];
 if (known.length) out += `\n<details><summary>Known server errors seen (${known.length}) — already reported, not failing the run</summary>\n\n${known.map(k => `- ${k}`).join('\n')}\n\n</details>\n`;
-console.log(out);
+// --github appends to the job summary directly (works in any shell, on Linux or Windows runners).
+if (process.argv.includes('--github') && process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, out + '\n');
+else console.log(out);

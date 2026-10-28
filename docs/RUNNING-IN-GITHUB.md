@@ -24,11 +24,42 @@
 | project | `hqzen` | more projects appear here as they get scripted specs |
 | environment | `develop` / `staging` | develop and staging run the same code; start on develop |
 | suite | `smoke` / `isolation` / `regression` / `full` | see below |
+| run_on | `github` / `my-computer` | `github` = GitHub's machine (no window). `my-computer` = your PC, needs the runner open (see below) |
+| show_browser | on/off | `my-computer` only: a real Chrome window opens on your screen, slowed down so you can follow |
 | create_accounts | on/off | off = specs that need fresh accounts skip themselves |
 | email_delivery | on/off | turn on only once the environment delivers email to the disposable domain |
 | record_video | `off` / `failures` / `all` | videos to watch the flow afterwards (artifact "videos-…", kept 3 days). **Caution:** videos show real pages of the test environment, and in a public repository any signed-in GitHub user can download run artifacts. Prefer watching locally (below). |
 
-GitHub runs on GitHub's own machine, so no window can open on your screen. To **watch** the browser, run locally.
+GitHub's own machines have no screen. To **watch** a run you start from GitHub, choose `run_on: my-computer`.
+
+## Watch GitHub runs in a real browser on your PC (`run_on: my-computer`)
+
+GitHub sends the job to your own Windows PC (a *self-hosted runner*), and Chrome opens there.
+
+**Once:**
+
+1. Make sure Node.js 20+ and Google Chrome are installed.
+2. Protect your PC (this repository is public): *Settings → Actions → General → Approval for running fork pull
+   request workflows from contributors* → **Require approval for all external contributors**. Only the manual E2E
+   workflow targets your PC; CI on pull requests always runs on GitHub's machines.
+3. *Settings → Actions → Runners → New self-hosted runner → Windows*, and copy the token shown after `--token`.
+4. In this folder run, and paste the token when asked (it is not shown or saved):
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File tools\runner\setup-windows.ps1
+   ```
+
+   This installs GitHub's official runner in `C:\agt-runner` (outside the repository) with the label `agt-local`.
+
+**Each time:**
+
+1. Start the runner and keep its window open: `C:\agt-runner\run.cmd` (it shows "Listening for Jobs").
+2. GitHub → *Actions → E2E tests (manual) → Run workflow* → `run_on: my-computer`, `show_browser: on`.
+3. Chrome opens and runs the flow; the results appear on the GitHub run page as usual. Close the runner window when done.
+
+If the runner is not open, the job waits in the queue until you start it (or cancel the run).
+The runner is deliberately not a Windows service: a service cannot show windows on your desktop.
+To remove it: *Settings → Actions → Runners → (your runner) → Remove*, then delete `C:\agt-runner`.
 
 | Suite | What it checks | Time |
 |---|---|---|

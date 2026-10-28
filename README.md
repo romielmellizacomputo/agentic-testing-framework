@@ -61,7 +61,8 @@ Then point your agent at `AGENTS.md` as above.
 | Accounts | test accounts per role | **fresh accounts created during the run** + one approver from secrets |
 | Output | `reports/<run>/`, `bugs/<run>/` | job summary + JUnit (`reports/e2e/`) |
 
-Run scripted tests from GitHub with **Actions → E2E tests (manual) → Run workflow** (project, environment, suite),
+Run scripted tests from GitHub with **Actions → E2E tests (manual) → Run workflow** (project, environment, suite;
+`run_on: my-computer` opens a real Chrome window on your own PC),
 or on your computer with `npm run e2e` — choose **watch** (a visible Chrome window), **background** (headless) or **ui** (step-by-step timeline).
 Setup and secrets: **[docs/RUNNING-IN-GITHUB.md](docs/RUNNING-IN-GITHUB.md)**. What the app team can change to make tests stronger: **[docs/DEV-REQUESTS.md](docs/DEV-REQUESTS.md)**.
 

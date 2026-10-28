@@ -1,6 +1,8 @@
 name: E2E tests (manual)
 
 # Run from GitHub: Actions -> "E2E tests (manual)" -> Run workflow -> pick project / environment / suite.
+# "run_on: my-computer" sends the job to your own PC (a self-hosted runner, see docs/RUNNING-IN-GITHUB.md),
+# where "show_browser" opens a real Chrome window you can watch.
 on:
   workflow_dispatch:
     inputs:
@@ -23,6 +25,15 @@ on:
           - regression   # executive workflows + approver page health
           - full         # everything except email-dependent flows
         default: smoke
+      run_on:
+        description: "Where to run: github (GitHub's machine, no window) or my-computer (your PC, needs the runner open)"
+        type: choice
+        options: [github, my-computer]
+        default: github
+      show_browser:
+        description: "my-computer only: open a visible Chrome window, slowed down so you can follow"
+        type: boolean
+        default: true
       create_accounts:
         description: Allow creating fresh test accounts (business sign-up)
         type: boolean
@@ -46,9 +57,10 @@ concurrency:
 
 jobs:
   e2e:
-    name: ${{ inputs.project }} / ${{ inputs.environment }} / ${{ inputs.suite }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    name: ${{ inputs.project }} / ${{ inputs.environment }} / ${{ inputs.suite }} (${{ inputs.run_on }})
+    # my-computer = a self-hosted runner registered with the label "agt-local".
+    runs-on: ${{ inputs.run_on == 'my-computer' && fromJSON('["self-hosted","agt-local"]') || 'ubuntu-latest' }}
+    timeout-minutes: 60
     # Secrets live in the GitHub Environment with the same name (Settings -> Environments -> develop|staging).
     environment: ${{ inputs.environment }}
     env:
@@ -56,6 +68,12 @@ jobs:
       AGT_PROJECT: ${{ inputs.project }}
       AGT_ENV: ${{ inputs.environment }}
       AGT_EMAIL_DELIVERY: ${{ inputs.email_delivery && '1' || '0' }}
+      AGT_NO_ACCOUNTS: ${{ !inputs.create_accounts && '1' || '0' }}
+      # Visible, slowed-down browser only on your own computer (GitHub's machines have no screen).
+      AGT_HEADED: ${{ inputs.run_on == 'my-computer' && inputs.show_browser && '1' || '0' }}
+      AGT_SLOWMO: ${{ inputs.run_on == 'my-computer' && inputs.show_browser && '400' || '0' }}
+      # On your computer use the installed Google Chrome instead of downloading Chromium.
+      AGT_CHANNEL: ${{ inputs.run_on == 'my-computer' && 'chrome' || '' }}
       # Standing approver (the only existing account the flows use). Stored as secrets, never in code.
       AGT_APPROVER_EMAIL: ${{ secrets.AGT_APPROVER_EMAIL }}
       AGT_APPROVER_PASSWORD: ${{ secrets.AGT_APPROVER_PASSWORD }}
@@ -69,30 +87,18 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - name: Install Chromium
+        if: inputs.run_on == 'github'
         run: npx playwright install --with-deps chromium
-
-      - name: Choose tests
-        id: pick
-        run: |
-          case "${{ inputs.suite }}" in
-            smoke)      grep='@smoke' ;;
-            isolation)  grep='@isolation' ;;
-            regression) grep='@regression' ;;
-            full)       grep='@smoke|@isolation|@regression|@security' ;;
-          esac
-          echo "grep=$grep" >> "$GITHUB_OUTPUT"
-          # Account creation can be switched off; specs then skip themselves.
-          if [ "${{ inputs.create_accounts }}" != "true" ]; then echo "AGT_NO_ACCOUNTS=1" >> "$GITHUB_ENV"; fi
 
       - name: Run Playwright
         env:
-          AGT_GREP: ${{ steps.pick.outputs.grep }}
+          AGT_GREP: ${{ inputs.suite == 'smoke' && '@smoke' || inputs.suite == 'isolation' && '@isolation' || inputs.suite == 'regression' && '@regression' || '@smoke|@isolation|@regression|@security' }}
           AGT_VIDEO: ${{ inputs.record_video == 'all' && 'on' || inputs.record_video == 'failures' && 'failures' || 'off' }}
         run: npx playwright test
 
       - name: Summary
         if: always()
-        run: node tools/e2e/summary.mjs >> "$GITHUB_STEP_SUMMARY"
+        run: node tools/e2e/summary.mjs --github
 
       # Only the JUnit file is uploaded: no screenshots, traces or page content (public repository).
       - name: Upload JUnit
