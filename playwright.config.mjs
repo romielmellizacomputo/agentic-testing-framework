@@ -25,6 +25,8 @@ export default defineConfig({
   retries: ci ? 1 : 0,
   forbidOnly: ci,
   reporter: [
+    // In CI, failing tests also appear as annotations on the run page (test name + assertion message).
+    ...(ci ? [['github']] : []),
     ['list'],
     ['junit', { outputFile: 'reports/e2e/junit.xml' }],
     ['json', { outputFile: 'reports/e2e/results.json' }],

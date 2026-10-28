@@ -26,8 +26,8 @@ test.describe.serial('executive workflows @regression', () => {
     await modal.getByRole('button', { name: 'Create' }).click();
     await page.waitForURL(/\/board\/\d+$/);
     await page.reload();
-    await expect(page.getByText(name).first()).toBeVisible();
-    for (const col of ['Important', 'To Do', 'Doing', 'For Review', 'Done']) await expect(page.getByText(col, { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(name).filter({ visible: true }).first()).toBeVisible();
+    for (const col of ['Important', 'To Do', 'Doing', 'For Review', 'Done']) await expect(page.getByText(col, { exact: true }).filter({ visible: true }).first()).toBeVisible();
     health.assertClean();
   });
 
@@ -42,9 +42,9 @@ test.describe.serial('executive workflows @regression', () => {
     await add.click();
     await page.keyboard.type(title);
     await page.keyboard.press('Enter');
-    await expect(page.getByText(title).first()).toBeVisible();
+    await expect(page.getByText(title).filter({ visible: true }).first()).toBeVisible();
     await page.reload();
-    await expect(page.getByText(title).first()).toBeVisible();
+    await expect(page.getByText(title).filter({ visible: true }).first()).toBeVisible();
     health.assertClean();
   });
 });

@@ -19,7 +19,8 @@ test.describe.serial('account factory @smoke @accounts', () => {
     expect(info.isWorkforceExec).toBe(true);
     expect(info.isOrgExec).toBe(false);
     expect(info.workforceIds).toEqual([exec.workforceId]);
-    await expect(page.getByText(exec.company).first()).toBeVisible();
+    // The company name appears in many places (sidebar, menus, hidden tooltips); require a visible one.
+    await expect(page.getByText(exec.company).filter({ visible: true }).first()).toBeVisible();
     health.assertClean();
   });
 
