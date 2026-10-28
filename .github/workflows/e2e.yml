@@ -55,7 +55,7 @@ jobs:
       AGT_APPROVER_EMAIL: ${{ secrets.AGT_APPROVER_EMAIL }}
       AGT_APPROVER_PASSWORD: ${{ secrets.AGT_APPROVER_PASSWORD }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: actions/setup-node@v4
