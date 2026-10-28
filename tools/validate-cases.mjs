@@ -2,10 +2,22 @@
 // Checks every test case file for format errors. Exit code 1 on errors.
 // Usage: node tools/validate-cases.mjs
 import fs from 'node:fs';
-import { loadModules, PRIORITIES, TYPES, roleNames, readJSON, P, expandRoute } from './lib/cases.mjs';
+import { spawnSync } from 'node:child_process';
+import { loadModules, PRIORITIES, TYPES, roleNames, readJSON, P, expandRoute, projectPath, activeProject, listProjects } from './lib/cases.mjs';
+
+// --all: validate every project (used by CI).
+if (process.argv.includes('--all')) {
+  let failed = 0;
+  for (const p of listProjects()) {
+    const r = spawnSync(process.execPath, [process.argv[1]], { env: { ...process.env, AGT_PROJECT: p }, encoding: 'utf8' });
+    console.log(`[${p}] ${(r.stdout.trim().split('\n').at(-1) || '').trim()}`);
+    if (r.status) { failed++; console.log(r.stdout); }
+  }
+  process.exit(failed ? 1 : 0);
+}
 
 const roles = new Set(roleNames());
-const routes = readJSON(P('inventory', 'routes.json'), { routes: [] }).routes.map(r => r.url);
+const routes = readJSON(projectPath('inventory', 'routes.json'), { routes: [] }).routes.map(r => r.url);
 const routeSet = new Set(routes);
 const errors = [];
 const warnings = [];
@@ -47,8 +59,9 @@ for (const m of modules) {
 for (const m of modules) for (const c of m.cases) for (const d of c.depends || [])
   if (!ids.has(d)) errors.push(`${m.file} ${c.id}: depends on unknown case ${d}`);
 
-for (const s of fs.readdirSync(P('suites')).filter(f => f.endsWith('.json'))) {
-  const suite = readJSON(P('suites', s));
+const suiteFiles = [P('suites'), projectPath('suites')].filter(d => fs.existsSync(d)).flatMap(d => fs.readdirSync(d).filter(f => f.endsWith('.json')).map(f => [d, f]));
+for (const [sd, s] of suiteFiles) {
+  const suite = readJSON(`${sd}/${s}`);
   for (const id of suite.select?.ids || []) if (!ids.has(id)) errors.push(`suites/${s}: unknown id ${id}`);
 }
 

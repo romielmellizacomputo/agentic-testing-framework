@@ -1,0 +1,99 @@
+name: E2E tests (manual)
+
+# Run from GitHub: Actions -> "E2E tests (manual)" -> Run workflow -> pick project / environment / suite.
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: App under test
+        type: choice
+        options: [hqzen]
+        default: hqzen
+      environment:
+        description: Test environment (develop and staging run the same code)
+        type: choice
+        options: [develop, staging]
+        default: develop
+      suite:
+        description: Which tests to run
+        type: choice
+        options:
+          - smoke        # public pages, sign-in, fresh account creation (~2 min)
+          - isolation    # two fresh executives must not see each other's workforce
+          - regression   # executive workflows + approver page health
+          - full         # everything except email-dependent flows
+        default: smoke
+      create_accounts:
+        description: Allow creating fresh test accounts (business sign-up)
+        type: boolean
+        default: true
+      email_delivery:
+        description: Environment delivers email to disposable inboxes (enables applicant/hiring flows)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ inputs.project }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    name: ${{ inputs.project }} / ${{ inputs.environment }} / ${{ inputs.suite }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Secrets live in the GitHub Environment with the same name (Settings -> Environments -> develop|staging).
+    environment: ${{ inputs.environment }}
+    env:
+      CI: 'true'
+      AGT_PROJECT: ${{ inputs.project }}
+      AGT_ENV: ${{ inputs.environment }}
+      AGT_EMAIL_DELIVERY: ${{ inputs.email_delivery && '1' || '0' }}
+      # Standing approver (the only existing account the flows use). Stored as secrets, never in code.
+      AGT_APPROVER_EMAIL: ${{ secrets.AGT_APPROVER_EMAIL }}
+      AGT_APPROVER_PASSWORD: ${{ secrets.AGT_APPROVER_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Choose tests
+        id: pick
+        run: |
+          case "${{ inputs.suite }}" in
+            smoke)      grep='@smoke' ;;
+            isolation)  grep='@isolation' ;;
+            regression) grep='@regression' ;;
+            full)       grep='@smoke|@isolation|@regression|@security' ;;
+          esac
+          echo "grep=$grep" >> "$GITHUB_OUTPUT"
+          # Account creation can be switched off; specs then skip themselves.
+          if [ "${{ inputs.create_accounts }}" != "true" ]; then echo "AGT_NO_ACCOUNTS=1" >> "$GITHUB_ENV"; fi
+
+      - name: Run Playwright
+        env:
+          AGT_GREP: ${{ steps.pick.outputs.grep }}
+        run: npx playwright test
+
+      - name: Summary
+        if: always()
+        run: node tools/e2e/summary.mjs >> "$GITHUB_STEP_SUMMARY"
+
+      # Only the JUnit file is uploaded: no screenshots, traces or page content (public repository).
+      - name: Upload JUnit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-${{ inputs.project }}-${{ inputs.environment }}-${{ inputs.suite }}
+          path: reports/e2e/junit.xml
+          retention-days: 7
+          if-no-files-found: ignore

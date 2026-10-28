@@ -29,9 +29,12 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci --ignore-scripts
-      - name: Validate test cases
-        run: node tools/validate-cases.mjs
+      - name: Validate test cases (all projects)
+        run: node tools/validate-cases.mjs --all
       - name: Scan for secrets and personal data
         run: node tools/check-secrets.mjs
       - name: Self-test (plan -> record -> report)
         run: node tools/selftest.mjs
+      - name: Scripted specs compile (no browser, no network)
+        run: |
+          AGT_PROJECT=hqzen npx playwright test --list

@@ -1,0 +1,5 @@
+{
+  "description": "One complete hiring story across employer and applicant: post a job, apply, shortlist, interview, offer, negotiate, accept, sign, review documents.",
+  "select": { "ids": ["REC-001", "REC-002", "APP-004", "REC-005", "REC-006", "APP-005", "REC-007", "REC-009", "APP-006", "APP-008", "REC-011", "APP-007", "REC-014", "REC-013"] },
+  "keepOrder": true
+}

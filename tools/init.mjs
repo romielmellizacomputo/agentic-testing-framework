@@ -1,23 +1,26 @@
 #!/usr/bin/env node
-// First-time setup: creates your private config files from the committed examples (never overwrites).
-//   node tools/init.mjs
+// First-time setup for the active project: creates its private config from the committed examples (never overwrites).
+//   node tools/init.mjs                (active project)
+//   AGT_PROJECT=myapp node tools/init.mjs
 import fs from 'node:fs';
-import { P } from './lib/cases.mjs';
+import { projectPath, activeProject } from './lib/cases.mjs';
 
+const project = activeProject();
 const pairs = [
-  ['config/env.example.json', 'config/env.json'],
-  ['config/accounts.example.json', 'config/accounts.local.json'],
-  ['config/roles.example.md', 'config/roles.md'],
+  ['env.example.json', 'env.json'],
+  ['accounts.example.json', 'accounts.local.json'],
 ];
 for (const [from, to] of pairs) {
-  if (fs.existsSync(P(to))) { console.log(`keep    ${to} (already exists)`); continue; }
-  fs.copyFileSync(P(from), P(to));
-  console.log(`created ${to}`);
+  const src = projectPath('config', from);
+  const dst = projectPath('config', to);
+  if (fs.existsSync(dst)) { console.log(`keep    projects/${project}/config/${to} (already exists)`); continue; }
+  if (!fs.existsSync(src)) { console.log(`skip    projects/${project}/config/${from} not found`); continue; }
+  fs.copyFileSync(src, dst);
+  console.log(`created projects/${project}/config/${to}`);
 }
 console.log(`
-Next:
-  1. Edit config/env.json      - your app's environments (never production), login selectors, route aliases.
-  2. Edit config/accounts.local.json - TEST accounts per role (or use AGT_ACCOUNT_<ROLE>_EMAIL/_PASSWORD env vars).
-  3. Edit config/roles.md      - your roles and who may access what.
-  4. Copy examples/test-cases/*.md into test-cases/ and adapt them, then: node tools/validate-cases.mjs
-These files are gitignored; keep them out of commits.`);
+Next (project "${project}"):
+  1. projects/${project}/config/env.json           - real environment URLs (never production), login selectors.
+  2. projects/${project}/config/accounts.local.json - TEST accounts per role, or AGT_ACCOUNT_<ROLE>_EMAIL/_PASSWORD env vars.
+  3. Optional: projects/${project}/config/roles.md  - private copy of roles if they differ from roles.example.md.
+These files are gitignored and blocked by tools/check-secrets.mjs. Check with: node tools/project.mjs status`);

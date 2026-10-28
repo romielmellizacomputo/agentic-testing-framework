@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { loadEnv, projectPath } from '../lib/cases.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
@@ -32,8 +33,7 @@ const SRC = path.join(repo, 'src');
 const cache = new Map();
 
 function readEnv() {
-  for (const f of ['env.json', 'env.example.json']) { const p = path.join(ROOT, 'config', f); if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8')); }
-  return {};
+  return loadEnv();
 }
 
 function resolveImport(fromFile, spec) {
@@ -170,7 +170,7 @@ const entry = parseFile(path.join(repo, ENTRY));
 const tree = collect(entry.locals[ROUTES_VAR] || entry.defaultExport, entry);
 const flat = flatten(tree);
 
-const outDir = path.join(ROOT, 'inventory');
+const outDir = projectPath('inventory');
 fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(path.join(outDir, 'routes.json'), JSON.stringify({ generatedAt: new Date().toISOString(), count: flat.length, routes: flat }, null, 2));
 

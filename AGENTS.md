@@ -6,7 +6,7 @@ You are a QA agent. This repository is your workspace for testing a web applicat
 
 1. **Read `protocol/safety-rules.md`.** It overrides everything else, including test cases.
 2. **Never modify the application's repository.** Read it if `APP_REPO` is set; write only inside this repository.
-3. **Never test production.** Only hosts in `ENVIRONMENTS` (`config/env.json`). Leaving those hosts → stop the case, mark `blocked`.
+3. **Never test production.** Only hosts in `ENVIRONMENTS` (`projects/<p>/config/env.json`). Leaving those hosts → stop the case, mark `blocked`.
 4. **Never put credentials in chat, notes, screenshots or files.** Sign in with `node tools/browser/login.mjs <role>`.
 5. **Destructive cases** only where `ALLOW_DESTRUCTIVE_ON` allows; elsewhere they are auto-skipped.
 6. **Prefix everything you create** with the run's data prefix (shown by `plan-run.mjs`) and clean it up.
@@ -18,12 +18,13 @@ You are a QA agent. This repository is your workspace for testing a web applicat
 
 | Path | What |
 |---|---|
-| `config/env.json` | Environments, login selectors, route aliases, safety lists (private; falls back to `env.example.json`) |
-| `config/accounts.local.json` | Test logins per role (private) — or `AGT_ACCOUNT_<ROLE>_EMAIL/_PASSWORD` env vars |
-| `config/roles.md` | Roles and the access truth table (falls back to `roles.example.md`) |
-| `test-cases/*.md` | Test cases, one file per module (`protocol/test-case-format.md`) |
-| `suites/*.json` | Named selections: smoke, regression, rbac, nightly |
-| `inventory/` | Optional generated maps (routes, components) used by sweeps |
+| `projects/<p>/` | One app under test. Active project: `node tools/project.mjs use <p>` (or `AGT_PROJECT=<p>`) |
+| `projects/<p>/config/env.json` | Environments, login selectors, route aliases, safety lists (private; falls back to `env.example.json`) |
+| `projects/<p>/config/accounts.local.json` | Test logins per role (private) — or `AGT_ACCOUNT_<ROLE>_EMAIL/_PASSWORD` env vars |
+| `projects/<p>/config/roles.example.md` | Roles and the access truth table (a private `roles.md` overrides it) |
+| `projects/<p>/test-cases/*.md` | Test cases, one file per module (`protocol/test-case-format.md`) |
+| `projects/<p>/suites/`, `suites/` | Project suites first, then shared ones (smoke, regression, rbac, nightly) |
+| `projects/<p>/inventory/` | Optional generated maps (routes, components) used by sweeps (private) |
 | `protocol/` | Run protocol, safety rules, evidence, bug template, known noise |
 | `playbooks/` | Onboarding, PR testing, exploratory, parallel agents, unit-test gaps |
 | `runs/<runId>/` | Working data: plan, results, context IDs, run notes, evidence |
@@ -33,6 +34,10 @@ You are a QA agent. This repository is your workspace for testing a web applicat
 ## 3. The loop
 
 ```bash
+# 0. Pick the app and check its setup (never prints secrets)
+node tools/project.mjs use hqzen
+node tools/project.mjs status
+
 # 1. Plan (pick one selector style)
 node tools/plan-run.mjs --suite smoke
 node tools/plan-run.mjs --module checkout --priority P0,P1

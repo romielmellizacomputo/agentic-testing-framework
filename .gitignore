@@ -1,13 +1,21 @@
 # --- Private configuration (never commit) ---
-config/env.json
-config/accounts.local.json
-config/roles.md
+# Every project keeps real URLs and accounts in these gitignored files;
+# only the *.example.* files next to them are public.
+projects/*/config/env.json
+projects/*/config/accounts.local.json
+projects/*/config/roles.md
+/config/
+.agt-project
 .env
 .env.*
 *.pem
 *.key
 *.p12
 *.pfx
+
+# --- Generated route/component inventories: they map your app's internals ---
+projects/*/inventory/*
+!projects/*/inventory/README.md
 
 # --- Test browser profile (cookies, sessions) ---
 .browser-profile/
@@ -19,8 +27,6 @@ reports/*
 !reports/README.md
 bugs/*
 !bugs/README.md
-inventory/*
-!inventory/README.md
 unit-drafts/*
 !unit-drafts/README.md
 scripted-drafts/

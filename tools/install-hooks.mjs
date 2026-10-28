@@ -11,7 +11,7 @@ const hook = path.join(hooks, 'pre-commit');
 fs.writeFileSync(hook, `#!/bin/sh
 # Installed by tools/install-hooks.mjs
 node tools/check-secrets.mjs || exit 1
-node tools/validate-cases.mjs >/dev/null || { node tools/validate-cases.mjs; exit 1; }
+node tools/validate-cases.mjs --all || exit 1
 `);
 fs.chmodSync(hook, 0o755);
 console.log('Installed .git/hooks/pre-commit (secret scan + test-case validation).');

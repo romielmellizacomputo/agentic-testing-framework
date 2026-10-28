@@ -10,10 +10,11 @@
   },
   "scripts": {
     "init": "node tools/init.mjs",
-    "validate": "node tools/validate-cases.mjs",
+    "validate": "node tools/validate-cases.mjs --all",
     "check-secrets": "node tools/check-secrets.mjs",
     "selftest": "node tools/selftest.mjs",
-    "test": "node tools/validate-cases.mjs && node tools/check-secrets.mjs && node tools/selftest.mjs",
+    "test": "node tools/validate-cases.mjs --all && node tools/check-secrets.mjs && node tools/selftest.mjs",
+    "project": "node tools/project.mjs",
     "plan:smoke": "node tools/plan-run.mjs --suite smoke",
     "status": "node tools/status.mjs latest",
     "report": "node tools/report.mjs latest",
@@ -31,5 +32,8 @@
     "llm-agents",
     "browser-automation",
     "rbac-testing"
-  ]
+  ],
+  "devDependencies": {
+    "@playwright/test": "1.48.2"
+  }
 }

@@ -27,7 +27,7 @@ const RULES = [
   ['Email address', /\b[A-Za-z0-9._%+-]+@(?!example\.(com|org|net)\b|users\.noreply\.github\.com\b|anthropic\.com\b)[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/],
 ];
 // Files that must never be committed, whatever they contain.
-const FORBIDDEN = [/^config\/accounts\.local\.json$/, /^config\/env\.json$/, /^\.browser-profile\//, /(^|\/)\.env(\.|$)/, /\.(pem|key|p12|pfx)$/];
+const FORBIDDEN = [/(^|\/)config\/accounts\.local\.json$/, /(^|\/)config\/env\.json$/, /(^|\/)config\/roles\.md$/, /^projects\/[^/]+\/inventory\/(?!README\.md$)/, /^\.browser-profile\//, /(^|\/)\.env(\.|$)/, /\.(pem|key|p12|pfx)$/];
 const SKIP = [/^node_modules\//, /^\.git\//, /package-lock\.json$/, /\.(png|jpe?g|gif|webp|ico|pdf|zip|woff2?)$/i];
 
 const all = process.argv.includes('--all');

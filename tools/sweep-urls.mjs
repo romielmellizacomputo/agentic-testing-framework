@@ -8,7 +8,7 @@
 // rbac:  every non-public route, filled with the admin's IDs, to probe pages the role should NOT reach.
 // Public routes are matched with env.PUBLIC_ROUTE_PATTERNS. Unfillable routes are listed as "unresolved".
 import path from 'node:path';
-import { loadRun, latestRunId, parseArgs, readJSON, writeJSON, P, loadEnv } from './lib/cases.mjs';
+import { loadRun, latestRunId, parseArgs, readJSON, writeJSON, P, loadEnv, projectPath } from './lib/cases.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 let [runId, kind] = args._;
@@ -17,13 +17,14 @@ if (!runId || !['pages', 'rbac'].includes(kind)) {
   process.exit(1);
 }
 if (runId === 'latest') runId = latestRunId();
+const runInfo = loadRun(runId); // switches to the run's project
 const env = loadEnv();
 const role = args.role && args.role !== true ? args.role : 'admin';
 const probeAs = args['probe-as'] && args['probe-as'] !== true ? args['probe-as'] : 'admin';
-const { dir, plan } = loadRun(runId);
+const { dir, plan } = runInfo;
 const ctx = readJSON(path.join(dir, 'context.json'), {});
-const routes = readJSON(P('inventory', 'routes.json'), null)?.routes;
-if (!routes) { console.error('No inventory/routes.json. Generate it (see tools/adapters/) or write it by hand: {"routes":[{"url":"/path","title":"..."}]}'); process.exit(1); }
+const routes = readJSON(projectPath('inventory', 'routes.json'), null)?.routes;
+if (!routes) { console.error('No projects/<project>/inventory/routes.json. Generate it (see tools/adapters/) or write it by hand: {"routes":[{"url":"/path","title":"..."}]}'); process.exit(1); }
 
 const values = kind === 'rbac' ? { ...(ctx[role] || {}), ...(ctx[probeAs] || {}) } : (ctx[role] || {});
 const publicRe = env.PUBLIC_ROUTE_PATTERNS.map(p => new RegExp(p));

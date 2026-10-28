@@ -1,0 +1,19 @@
+{
+  "_readme": "Empty on purpose. Fresh accounts are created by the flows; only the approver comes from secrets (AGT_APPROVER_EMAIL / AGT_APPROVER_PASSWORD).",
+  "employer": {
+    "email": "",
+    "password": ""
+  },
+  "applicant": {
+    "email": "",
+    "password": ""
+  },
+  "employee": {
+    "email": "",
+    "password": ""
+  },
+  "approver": {
+    "email": "",
+    "password": ""
+  }
+}

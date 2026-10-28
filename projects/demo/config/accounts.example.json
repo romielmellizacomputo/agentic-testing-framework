@@ -1,0 +1,10 @@
+{
+  "_readme": "Copy to config/accounts.local.json (gitignored) OR set env vars AGT_ACCOUNT_<ROLE>_EMAIL / AGT_ACCOUNT_<ROLE>_PASSWORD (e.g. GitHub Actions secrets). Use dedicated TEST accounts only - never real people's accounts, never production credentials.",
+  "_allowed_email_domains": ["example.com"],
+
+  "admin":            { "email": "", "password": "" },
+  "manager":          { "email": "", "password": "" },
+  "member":           { "email": "", "password": "" },
+  "viewer":           { "email": "", "password": "" },
+  "other_tenant_user":{ "email": "", "password": "" }
+}

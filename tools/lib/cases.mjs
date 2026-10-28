@@ -6,6 +6,29 @@ import { fileURLToPath } from 'node:url';
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const P = (...p) => path.join(ROOT, ...p);
 
+// ---------- Projects ----------
+// Each app under test lives in projects/<name>/ (config/, test-cases/, suites/, inventory/).
+// Active project: AGT_PROJECT env var > .agt-project file (set by `node tools/project.mjs use <name>`) > "demo".
+// Tools that work on an existing run switch to that run's project automatically (see loadRun).
+export function listProjects() {
+  const dir = P('projects');
+  return fs.existsSync(dir) ? fs.readdirSync(dir).filter(d => !d.startsWith('_') && fs.existsSync(path.join(dir, d, 'test-cases'))).sort() : [];
+}
+export function activeProject() {
+  const fromEnv = process.env.AGT_PROJECT;
+  const fromFile = fs.existsSync(P('.agt-project')) ? fs.readFileSync(P('.agt-project'), 'utf8').trim() : '';
+  const name = fromEnv || fromFile || 'demo';
+  if (!/^[a-z0-9][a-z0-9_-]*$/i.test(name)) throw new Error(`Invalid project name: ${name}`);
+  if (!fs.existsSync(P('projects', name))) throw new Error(`Project "${name}" not found. Known: ${listProjects().join(', ')}. Create one with: node tools/project.mjs new ${name}`);
+  return name;
+}
+export const projectPath = (...p) => P('projects', activeProject(), ...p);
+// A file from the project's config, preferring the private copy over the committed example.
+function configFile(privateName, exampleName) {
+  for (const f of [projectPath('config', privateName), projectPath('config', exampleName)]) if (fs.existsSync(f)) return f;
+  return null;
+}
+
 export const STATUSES = ['not_run', 'pass', 'fail', 'blocked', 'skipped', 'needs_update', 'flaky'];
 export const PRIORITIES = ['P0', 'P1', 'P2', 'P3'];
 export const TYPES = ['functional', 'negative', 'rbac', 'validation', 'ui', 'a11y', 'performance', 'security', 'e2e'];
@@ -21,9 +44,11 @@ export function writeJSON(file, data) {
   fs.renameSync(tmp, file);
 }
 
-// config/env.json is private (gitignored). Fall back to the committed example so the demo works out of the box.
+// projects/<p>/config/env.json is private (gitignored); fall back to the committed env.example.json.
 export function loadEnv() {
-  const env = readJSON(P('config', 'env.json'), null) || readJSON(P('config', 'env.example.json'), {});
+  const f = configFile('env.json', 'env.example.json');
+  const env = f ? readJSON(f, {}) : {};
+  env.PROJECT = activeProject();
   env.ENVIRONMENTS ||= {};
   env.ROUTE_ALIASES ||= {};
   env.PUBLIC_ROUTE_PATTERNS ||= [];
@@ -37,11 +62,12 @@ export function baseUrl(env = loadEnv(), name = env.TARGET_ENV) {
   return u.replace(/\/$/, '');
 }
 
-// Accounts: config/accounts.local.json (gitignored) or environment variables
+// Accounts: projects/<p>/config/accounts.local.json (gitignored) or environment variables
 //   AGT_ACCOUNT_<ROLE>_EMAIL / AGT_ACCOUNT_<ROLE>_PASSWORD   (role upper-cased, e.g. AGT_ACCOUNT_ADMIN_EMAIL)
 // Environment variables win, so CI can inject secrets without any file on disk.
+// Never reads the committed accounts.example.json for credentials.
 export function loadAccounts() {
-  const file = readJSON(P('config', 'accounts.local.json'), {}) || {};
+  const file = readJSON(projectPath('config', 'accounts.local.json'), {}) || {};
   const out = {};
   for (const [k, v] of Object.entries(file)) if (!k.startsWith('_')) out[k] = { ...v };
   for (const [k, v] of Object.entries(process.env)) {
@@ -55,7 +81,8 @@ export function loadAccounts() {
 }
 
 export function roleNames() {
-  const file = fs.existsSync(P('config', 'roles.md')) ? P('config', 'roles.md') : P('config', 'roles.example.md');
+  const file = configFile('roles.md', 'roles.example.md');
+  if (!file) return [];
   const md = fs.readFileSync(file, 'utf8');
   return [...md.matchAll(/^\| `([a-z0-9_]+)` \|/gm)].map(m => m[1]);
 }
@@ -81,7 +108,7 @@ export const maskEmail = e => String(e || '').replace(/^(.).*(@.*)$/, '$1***$2')
 const list = v => (v || '').split(',').map(s => s.trim()).filter(Boolean);
 
 export function loadModules() {
-  const dir = P('test-cases');
+  const dir = projectPath('test-cases');
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.md') && !f.startsWith('_')).sort();
   return files.map((f, order) => parseModule(path.join(dir, f), order));
 }
@@ -95,6 +122,7 @@ export function parseModule(file, order = 0) {
   const module = {
     file: path.relative(ROOT, file).replace(/\\/g, '/'),
     order,
+    project: path.relative(P('projects'), file).split(path.sep)[0],
     title: (head.match(/^# (.+)$/m) || [])[1] || path.basename(file),
     module: meta.module,
     prefix: meta.prefix,
@@ -142,12 +170,25 @@ export function loadRun(runId) {
   const dir = runDir(runId);
   const plan = readJSON(path.join(dir, 'plan.json'), null);
   if (!plan) throw new Error(`Run not found: ${runId}`);
+  if (plan.project) process.env.AGT_PROJECT = plan.project; // later config/case lookups use the run's project
   return { dir, plan, results: readJSON(path.join(dir, 'results.json'), {}) };
 }
-export function latestRunId() {
+// Latest run, by default of the active project (pass any=true for the latest of all projects).
+export function latestRunId(any = false) {
   const dir = P('runs');
   if (!fs.existsSync(dir)) return null;
-  return fs.readdirSync(dir).filter(d => fs.existsSync(path.join(dir, d, 'plan.json'))).sort().at(-1) || null;
+  let ids = fs.readdirSync(dir).filter(d => fs.existsSync(path.join(dir, d, 'plan.json'))).sort();
+  if (!any) {
+    let proj = null; try { proj = activeProject(); } catch { /* ignore */ }
+    const mine = ids.filter(d => (readJSON(path.join(dir, d, 'plan.json'), {}).project || 'demo') === proj);
+    if (mine.length) ids = mine;
+  }
+  return ids.at(-1) || null;
+}
+// Suites: the project's own suites/ first, then the shared root suites/.
+export function suitePath(name) {
+  for (const f of [projectPath('suites', `${name}.json`), P('suites', `${name}.json`)]) if (fs.existsSync(f)) return f;
+  return null;
 }
 
 export function parseArgs(argv) {

@@ -1,0 +1,14 @@
+[
+  { "pattern": "/api-sileo/v1/hqzen/resignation/filter/", "status": 500, "issue": "HOME-001 resignation filter 500 on Home" },
+  { "pattern": "/api-sileo/v1/hqzen/todo/filter/", "status": 500, "issue": "HR-001 HR Portal todo filter 500" },
+  { "pattern": "/api-sileo/v1/hqzen/manager-supervisor-", "status": 500, "issue": "HOME-004 executive overview widgets 500" },
+  { "pattern": "/api-sileo/v1/hqzen/sme-", "status": 500, "issue": "HOME-004 executive overview widgets 500" },
+  { "pattern": "/api-sileo/v1/hqzen/timelog-list/filter/", "status": 500, "issue": "TM-010 timelog list 500" },
+  { "pattern": "/api-sileo/v1/hqzen/staff-counts/filter/", "status": 500, "issue": "staff counts 500" },
+  { "pattern": "/api-sileo/v1/hqzen/staff-department/filter/", "status": 500, "issue": "staff department 500" },
+  { "pattern": "/api-sileo/v1/hqzen/employee-daf-count/filter/", "status": 500, "issue": "partner details count 500" },
+  { "pattern": "/api-sileo/v1/hqzen/employment-incident-report-count/filter/", "status": 500, "issue": "partner details count 500" },
+  { "pattern": "/api-sileo/v1/hqzen/workforce-hr-admins/filter/", "status": 500, "issue": "workforce admin lists 500" },
+  { "pattern": "/api-sileo/v1/hqzen/workforce-executives/filter/", "status": 500, "issue": "workforce admin lists 500" },
+  { "pattern": "/api-sileo/v1/hqzen/workforce-employees/filter/", "status": 500, "issue": "workforce admin lists 500" }
+]

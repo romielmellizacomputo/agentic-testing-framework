@@ -1,0 +1,21 @@
+{
+  "_readme": "Public example with EMPTY values. Real test logins go in accounts.local.json (gitignored) or AGT_ACCOUNT_<ROLE>_EMAIL / AGT_ACCOUNT_<ROLE>_PASSWORD env vars. Never commit real accounts.",
+  "_allowed_email_domains": ["example.com"],
+
+  "org_exec":               { "email": "", "password": "", "company": "", "workforce": "" },
+  "workforce_exec":         { "email": "", "password": "", "company": "", "workforce": "" },
+  "non_exec":               { "email": "", "password": "", "company": "", "workforce": "" },
+  "manager":                { "email": "", "password": "", "company": "", "workforce": "" },
+  "supervisor":             { "email": "", "password": "", "company": "", "workforce": "" },
+  "employee":               { "email": "", "password": "", "company": "", "workforce": "" },
+  "hr_admin":               { "email": "", "password": "", "company": "", "workforce": "" },
+  "payroll_supervisor":     { "email": "", "password": "", "company": "", "workforce": "" },
+  "recruiter":              { "email": "", "password": "", "company": "", "workforce": "" },
+  "job_posting_access":     { "email": "", "password": "", "company": "", "workforce": "" },
+  "applicant":              { "email": "", "password": "" },
+  "blocked_partner":        { "email": "", "password": "", "company": "", "workforce": "" },
+  "other_company_exec":     { "email": "", "password": "", "company": "", "workforce": "" },
+  "other_company_employee": { "email": "", "password": "", "company": "", "workforce": "" },
+  "scalema_client":         { "email": "", "password": "" },
+  "solutions_expert":       { "email": "", "password": "" }
+}

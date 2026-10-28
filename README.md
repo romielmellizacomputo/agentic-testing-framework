@@ -39,13 +39,58 @@ Then open your AI agent **in this folder** and say:
 
 Results: `reports/<runId>/report.md` and `bugs/<runId>/`.
 
-## Use it on your app
+### Run the HQZen suite
 
 ```bash
-node tools/init.mjs     # creates private config: env.json, accounts.local.json, roles.md (all gitignored)
+node tools/project.mjs use hqzen
+node tools/init.mjs                    # first time: fill projects/hqzen/config/env.json + accounts.local.json
+node tools/project.mjs status          # check environments and which roles have accounts
+node tools/plan-run.mjs --suite smoke  # or --module boards, --suite hiring-e2e, --changed origin/staging
+node tools/browser/launch.mjs
 ```
 
-Then follow **[playbooks/onboard-your-app.md](playbooks/onboard-your-app.md)**: set environments and login selectors, describe roles, add one test account per role, copy the templates from `examples/test-cases/`, and run a smoke suite.
+Then point your agent at `AGENTS.md` as above.
+
+## Two ways to test
+
+| | **Agentic runs** | **Scripted runs (Playwright)** |
+|---|---|---|
+| Who drives | an AI agent following Markdown test cases | Playwright specs, locally or in GitHub Actions |
+| Where | `projects/<p>/test-cases/*.md` | `projects/<p>/e2e/*.spec.mjs` |
+| Best for | broad coverage, exploratory testing, new features, UI that changes often | repeatable checks on every deploy: smoke, permissions/isolation, page health |
+| Accounts | test accounts per role | **fresh accounts created during the run** + one approver from secrets |
+| Output | `reports/<run>/`, `bugs/<run>/` | job summary + JUnit (`reports/e2e/`) |
+
+Run scripted tests from GitHub with **Actions → E2E tests (manual) → Run workflow** (project, environment, suite).
+Setup and secrets: **[docs/RUNNING-IN-GITHUB.md](docs/RUNNING-IN-GITHUB.md)**. What the app team can change to make tests stronger: **[docs/DEV-REQUESTS.md](docs/DEV-REQUESTS.md)**.
+
+Test hosts are allowlisted in `tools/e2e/targets.mjs`: only **develop-hqzen** and **staging-hqzen** (plus localhost and the demo). Other projects' hosts must be enabled explicitly with `AGT_EXTRA_ALLOWED_HOSTS`, and production can never be added.
+
+## Projects: test many apps from one repo
+
+Every app under test is a **project** in `projects/<name>/` with its own test cases, roles, suites and config:
+
+```
+projects/
+  hqzen/     HQZen: 289 agentic cases in 22 modules + 7 Playwright spec files (smoke, accounts, isolation, health)
+  bposeats/  bposeats.com: core agentic cases + public-page spec (host not enabled by default)
+  scalema/   scalema.com: core agentic cases + public-page spec (host not enabled by default)
+  ministry/  ministry-vuejs (internal admin): core agentic cases (host not enabled by default)
+  demo/      runnable TodoMVC example
+  _template/ copied by `node tools/project.mjs new <name>`
+```
+
+```bash
+node tools/project.mjs list           # projects (active one marked *)
+node tools/project.mjs use hqzen      # switch the active project
+node tools/project.mjs new myapp      # add another app
+node tools/init.mjs                   # create the active project's PRIVATE config
+node tools/project.mjs status         # what is configured (never shows secrets)
+```
+
+**What is public and what stays private** — only test cases, roles and `*.example.*` files are committed. Each project's real environment URLs (`config/env.json`), test accounts (`config/accounts.local.json`), route inventory and every run/report/bug stay on your machine: they are gitignored **and** blocked by the secret scanner, so they cannot be committed by accident. In CI, pass accounts as secrets (`AGT_ACCOUNT_<ROLE>_EMAIL` / `_PASSWORD`).
+
+To set up a new app, follow **[playbooks/onboard-your-app.md](playbooks/onboard-your-app.md)**.
 
 ## How it works
 
@@ -63,7 +108,8 @@ test-cases/*.md ──► plan-run.mjs ──► runs/<id>/plan.json
 
 | Command | Purpose |
 |---|---|
-| `node tools/plan-run.mjs --suite smoke` | Plan a run (`--module`, `--tags`, `--priority`, `--role`, `--changed <ref>`, `--shard k/n`, `--dry`) |
+| `node tools/project.mjs list\|use\|new\|status` | Manage the apps under test |
+| `node tools/plan-run.mjs --suite smoke` | Plan a run (`--project`, `--module`, `--tags`, `--priority`, `--role`, `--changed <ref>`, `--shard k/n`, `--dry`) |
 | `node tools/status.mjs latest` | Progress and next rows |
 | `node tools/record.mjs latest <ROW> <status> [...]` | Record a result (`--note`, `--sev`, `--evidence`, `--bug-title`, `--repro`, `--same-as`) |
 | `node tools/record-batch.mjs latest results.json` | Record many results |
@@ -81,10 +127,9 @@ Optional adapters: `tools/adapters/vue-router-routes.mjs` (route inventory from 
 
 ```
 AGENTS.md              agent operating manual (start here)
-config/                *.example files — your real config is gitignored
-test-cases/            your test cases (ships with a runnable TodoMVC demo + _TEMPLATE.md)
+projects/<name>/       one folder per app: config/*.example.*, test-cases/, suites/, inventory/
 examples/test-cases/   reusable templates: auth, permissions & isolation, quality sweeps
-suites/                smoke, regression, rbac, nightly
+suites/                shared suites: smoke, regression, rbac, nightly (projects can add their own)
 protocol/              run protocol, safety rules, evidence, bug template, known noise
 playbooks/             onboarding, PR testing, exploratory, parallel agents, unit-test gaps
 prompts/               copy-paste prompts

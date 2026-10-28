@@ -7,9 +7,10 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { P, readJSON } from './lib/cases.mjs';
 
+process.env.AGT_PROJECT = 'demo'; // selftest always uses the bundled demo project
 const runId = `selftest-${process.pid}`;
 const node = (...a) => {
-  const r = spawnSync(process.execPath, a, { cwd: P(), encoding: 'utf8' });
+  const r = spawnSync(process.execPath, a, { cwd: P(), encoding: 'utf8', env: process.env });
   if (r.status !== 0) { console.error(`FAILED: node ${a.join(' ')}\n${r.stdout}\n${r.stderr}`); cleanup(); process.exit(1); }
   return r.stdout;
 };
@@ -20,7 +21,7 @@ const cleanup = () => {
 const hasOtherRuns = () => fs.readdirSync(P('runs')).some(d => d !== runId && fs.existsSync(P('runs', d, 'plan.json')));
 const assert = (cond, msg) => { if (!cond) { console.error(`ASSERT: ${msg}`); cleanup(); process.exit(1); } console.log(`ok - ${msg}`); };
 
-node('tools/validate-cases.mjs');
+node('tools/validate-cases.mjs', '--all');
 console.log('ok - test cases valid');
 node('tools/plan-run.mjs', '--suite', 'smoke', '--run-id', runId);
 const plan = readJSON(P('runs', runId, 'plan.json'));

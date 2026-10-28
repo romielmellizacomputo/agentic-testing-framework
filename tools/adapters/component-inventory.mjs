@@ -7,11 +7,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadEnv, projectPath } from '../lib/cases.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
-const envPath = ['env.json', 'env.example.json'].map(f => path.join(ROOT, 'config', f)).find(f => fs.existsSync(f));
-const env = envPath ? JSON.parse(fs.readFileSync(envPath, 'utf8')) : {};
+const env = loadEnv();
 const argv = process.argv.slice(2);
 const opt = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 ? argv[i + 1] : d; };
 const repo = opt('repo', env.APP_REPO);
@@ -39,7 +39,7 @@ const specNames = new Set(specs.map(s => path.basename(s).replace(/\.(spec|test)
 const vue = files.filter(f => EXT.some(e => f.endsWith(e)) && !/\.(spec|test)\./.test(f));
 
 const routes = (() => {
-  const p = path.join(ROOT, 'inventory', 'routes.json');
+  const p = projectPath('inventory', 'routes.json');
   return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')).routes : [];
 })();
 const pageToRoutes = {};
@@ -62,8 +62,8 @@ for (const c of components) {
   else byArea[key].untested.push(c.name);
 }
 
-fs.mkdirSync(path.join(ROOT, 'inventory'), { recursive: true });
-fs.writeFileSync(path.join(ROOT, 'inventory', 'components.json'),
+fs.mkdirSync(projectPath('inventory'), { recursive: true });
+fs.writeFileSync(projectPath('inventory', 'components.json'),
   JSON.stringify({ generatedAt: new Date().toISOString(), total: components.length, specFiles: specs.length, components }, null, 2));
 
 const tested = components.filter(c => c.hasSpec).length;
@@ -82,5 +82,5 @@ for (const k of keys) {
   if (!a.untested.length) continue;
   md += `<details><summary>${k} — ${a.untested.length} untested</summary>\n\n${a.untested.sort().join(', ')}\n\n</details>\n\n`;
 }
-fs.writeFileSync(path.join(ROOT, 'inventory', 'COMPONENTS.md'), md);
+fs.writeFileSync(projectPath('inventory', 'COMPONENTS.md'), md);
 console.log(`Inventoried ${components.length} components (${tested} with specs) in ${keys.length} areas.`);

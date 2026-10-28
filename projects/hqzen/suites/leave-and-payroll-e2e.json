@@ -1,0 +1,5 @@
+{
+  "description": "Employee requests flowing to supervisor and HR: leave, timelog issue, overtime, allowance, accountability.",
+  "select": { "ids": ["CAR-003", "SM-008", "HR-004", "CAR-004", "TM-011", "SM-006", "TM-014", "SM-007", "TM-013", "SM-012", "CAR-008"] },
+  "keepOrder": true
+}

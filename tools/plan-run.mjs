@@ -15,9 +15,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { allCases, loadModules, loadEnv, loadAccounts, parseArgs, readJSON, writeJSON, P, runDir } from './lib/cases.mjs';
+import { allCases, loadModules, loadEnv, loadAccounts, parseArgs, readJSON, writeJSON, P, runDir, suitePath } from './lib/cases.mjs';
 
 const args = parseArgs(process.argv.slice(2));
+if (args.project && args.project !== true) process.env.AGT_PROJECT = String(args.project);
 const env = loadEnv();
 const targetEnv = args.env || env.TARGET_ENV;
 if ((env.NEVER_RUN_ON || []).includes(targetEnv)) die(`Refusing to plan a run against "${targetEnv}".`);
@@ -33,8 +34,9 @@ let keepOrder = false;
 
 // Suite
 if (args.suite) {
-  const suite = readJSON(P('suites', `${args.suite}.json`), null);
-  if (!suite) die(`Suite not found: suites/${args.suite}.json`);
+  const sp = suitePath(args.suite);
+  const suite = sp ? readJSON(sp, null) : null;
+  if (!suite) die(`Suite not found: ${args.suite} (looked in projects/${env.PROJECT}/suites/ and suites/)`);
   cases = applySelect(cases, suite.select || {}, false);
   if (suite.exclude) cases = applySelect(cases, suite.exclude, true);
   keepOrder = !!suite.keepOrder;
@@ -141,17 +143,17 @@ const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '').
 const label = (args.suite || filt.modules[0] || filt.tags[0] || (args.changed ? 'changed' : 'custom')).toString().replace(/[^a-z0-9-]/gi, '');
 const runIdArg = args['run-id'];
 if (runIdArg && !/^[A-Za-z0-9._-]+$/.test(runIdArg)) die('--run-id may only contain letters, digits, . _ -');
-const runId = runIdArg || `${stamp}-${label}${args.shard ? `-s${String(args.shard).replace('/', 'of')}` : ''}`;
+const runId = runIdArg || `${stamp}-${env.PROJECT}-${label}${args.shard ? `-s${String(args.shard).replace('/', 'of')}` : ''}`;
 
 const plan = {
-  runId, createdAt: new Date().toISOString(), env: targetEnv, baseUrl, allowDestructive,
+  runId, project: env.PROJECT, createdAt: new Date().toISOString(), env: targetEnv, baseUrl, allowDestructive,
   selector: selectorDesc.join(' · '), prefix: `${env.DATA_PREFIX}-${runId.slice(0, 13)}`,
   counts: { cases: new Set(rows.map(r => r.id)).size, rows: rows.length, autoSkipped: Object.values(results).filter(r => r.status === 'skipped').length },
   rolesNeeded: neededRoles, rolesMissingAccounts: missing,
   rows,
 };
 
-console.log(`\nRun ${runId}`);
+console.log(`\nRun ${runId}  (project ${env.PROJECT})`);
 console.log(`  env        ${targetEnv} (${baseUrl})${allowDestructive ? '' : '  — destructive cases auto-skipped'}`);
 console.log(`  selector   ${plan.selector}`);
 console.log(`  rows       ${rows.length} (${plan.counts.cases} cases), ${plan.counts.autoSkipped} auto-skipped`);
