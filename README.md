@@ -5,7 +5,7 @@
 You write test cases in Markdown. An AI agent (Claude, Codex, Cursor, Gemini, or any agent that can drive a browser and run Node.js) plans a run, drives a real browser, records each result, and hands back a report with a clear verdict, JUnit XML for CI, and one ready-to-file bug per defect.
 
 [![CI](https://github.com/romielmellizacomputo/agentic-testing-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/romielmellizacomputo/agentic-testing-framework/actions/workflows/ci.yml)
-![Node](https://img.shields.io/badge/node-%3E%3D18-blue) ![License: MIT](https://img.shields.io/badge/license-MIT-green)
+![Node](https://img.shields.io/badge/node-%3E%3D20-blue) ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
 ---
 
@@ -22,7 +22,7 @@ You write test cases in Markdown. An AI agent (Claude, Codex, Cursor, Gemini, or
 
 ## Quick start (2 minutes, no accounts needed)
 
-Requires Node.js 18+ and Google Chrome.
+Requires Node.js 20+ and Google Chrome.
 
 ```bash
 git clone https://github.com/romielmellizacomputo/agentic-testing-framework.git

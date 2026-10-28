@@ -6,7 +6,7 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "init": "node tools/init.mjs",
@@ -22,7 +22,7 @@
     "hooks": "node tools/install-hooks.mjs"
   },
   "dependencies": {
-    "playwright-core": "1.48.2"
+    "playwright-core": "1.64.1"
   },
   "keywords": [
     "agentic-testing",
@@ -34,6 +34,6 @@
     "rbac-testing"
   ],
   "devDependencies": {
-    "@playwright/test": "1.48.2"
+    "@playwright/test": "1.64.1"
   }
 }
