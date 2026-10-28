@@ -31,6 +31,11 @@ on:
         description: Environment delivers email to disposable inboxes (enables applicant/hiring flows)
         type: boolean
         default: false
+      record_video:
+        description: "Record videos to watch the flow afterwards (CAUTION: shows develop data; any signed-in GitHub user can download artifacts of a public repo; kept 3 days)"
+        type: choice
+        options: ['off', failures, all]
+        default: 'off'
 
 permissions:
   contents: read
@@ -82,6 +87,7 @@ jobs:
       - name: Run Playwright
         env:
           AGT_GREP: ${{ steps.pick.outputs.grep }}
+          AGT_VIDEO: ${{ inputs.record_video == 'all' && 'on' || inputs.record_video == 'failures' && 'failures' || 'off' }}
         run: npx playwright test
 
       - name: Summary
@@ -96,4 +102,14 @@ jobs:
           name: junit-${{ inputs.project }}-${{ inputs.environment }}-${{ inputs.suite }}
           path: reports/e2e/junit.xml
           retention-days: 7
+          if-no-files-found: ignore
+
+      # Opt-in only (record_video input). Videos show real pages of the test environment.
+      - name: Upload videos
+        if: always() && inputs.record_video != 'off'
+        uses: actions/upload-artifact@v4
+        with:
+          name: videos-${{ inputs.project }}-${{ inputs.environment }}-${{ inputs.suite }}
+          path: reports/e2e/artifacts/**/*.webm
+          retention-days: 3
           if-no-files-found: ignore

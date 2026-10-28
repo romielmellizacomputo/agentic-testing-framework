@@ -19,6 +19,11 @@
     "status": "node tools/status.mjs latest",
     "report": "node tools/report.mjs latest",
     "browser": "node tools/browser/launch.mjs",
+    "e2e": "node tools/e2e/run.mjs",
+    "e2e:watch": "node tools/e2e/run.mjs --mode watch",
+    "e2e:background": "node tools/e2e/run.mjs --mode background",
+    "e2e:ui": "node tools/e2e/run.mjs --mode ui",
+    "e2e:summary": "node tools/e2e/summary.mjs",
     "hooks": "node tools/install-hooks.mjs"
   },
   "dependencies": {

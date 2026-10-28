@@ -26,6 +26,9 @@
 | suite | `smoke` / `isolation` / `regression` / `full` | see below |
 | create_accounts | on/off | off = specs that need fresh accounts skip themselves |
 | email_delivery | on/off | turn on only once the environment delivers email to the disposable domain |
+| record_video | `off` / `failures` / `all` | videos to watch the flow afterwards (artifact "videos-…", kept 3 days). **Caution:** videos show real pages of the test environment, and in a public repository any signed-in GitHub user can download run artifacts. Prefer watching locally (below). |
+
+GitHub runs on GitHub's own machine, so no window can open on your screen. To **watch** the browser, run locally.
 
 | Suite | What it checks | Time |
 |---|---|---|
@@ -43,13 +46,22 @@ The job summary lists every test with ✅/❌/⏭️ and the reason for skips. A
 - Never uploaded: screenshots, videos, traces, HTML reports, page content, created account credentials.
 - The approver's email/password exist only as GitHub secrets and are masked in logs.
 
-## Run the same thing locally
+## Run the same thing on your computer (watch it or run in the background)
 
 ```bash
-npm ci && npx playwright install chromium
-export AGT_APPROVER_EMAIL=...  AGT_APPROVER_PASSWORD=...     # or use projects/hqzen/config/accounts.local.json (org_exec)
-AGT_PROJECT=hqzen AGT_ENV=develop AGT_GREP=@smoke npx playwright test
-AGT_HEADED=1 ...                      # watch the browser
-AGT_ARTIFACTS=1 ...                   # keep screenshots/traces of failures (local only - they may contain real data)
-node tools/e2e/summary.mjs            # Markdown summary of the last run
+npm ci                     # once; uses your installed Google Chrome (or: npx playwright install chromium)
+npm run e2e                # asks: project, environment, suite, mode
 ```
+
+| Mode | Command | What you see |
+|---|---|---|
+| **watch** | `npm run e2e:watch` | a real Chrome window opens and you follow every click (slowed down; add `-- --slow 800` for slower) |
+| **background** | `npm run e2e:background` | nothing opens; fastest; results in the terminal |
+| **ui** | `npm run e2e:ui` | Playwright's test UI: pick tests, watch each step, replay the timeline, inspect the page at any step |
+
+Skip the questions with flags: `node tools/e2e/run.mjs --project hqzen --env develop --suite isolation --mode watch`
+(suite = `smoke`, `isolation`, `regression`, `full`, or a test id such as `ACC-001`).
+
+The approver login comes from `AGT_APPROVER_EMAIL` / `AGT_APPROVER_PASSWORD` or the private
+`projects/hqzen/config/accounts.local.json` (role `org_exec`). Extras: `AGT_ARTIFACTS=1` keeps screenshots/traces of
+failures, `AGT_VIDEO=on` records videos (both stay on your computer). `npm run e2e:summary` prints the last run's summary.
